@@ -31,8 +31,8 @@ public class BackendApplication {
                 serviceInfo.save(new com.quickhelp.backend.model.Service(null, "Pest Control", "bug_report", "Remove pests", 0L));
                 
                 // Seed Providers
-                providerInfo.save(new com.quickhelp.backend.model.Provider(null, "Asha", "Maid", "₹300/hr", "Female", "+91 90000 00001", 4.5, 12.9716, 77.5946, "https://i.pravatar.cc/150?img=1", null));
-                providerInfo.save(new com.quickhelp.backend.model.Provider(null, "Raju", "Plumber", "₹350/hr", "Male", "+91 90000 00002", 4.7, 12.9716, 77.5946, "https://i.pravatar.cc/150?img=2", null));
+                providerInfo.save(new com.quickhelp.backend.model.Provider(null, "Asha", "Maid", "₹300/hr", "Female", "+91 90000 00001", 4.5, 12.9716, 77.5946, "https://i.pravatar.cc/150?img=1", null, "+91 90000 00001", null));
+                providerInfo.save(new com.quickhelp.backend.model.Provider(null, "Raju", "Plumber", "₹350/hr", "Male", "+91 90000 00002", 4.7, 12.9716, 77.5946, "https://i.pravatar.cc/150?img=2", null, "+91 90000 00002", null));
 
                 System.out.println("Data Seeding Completed!");
             } else {

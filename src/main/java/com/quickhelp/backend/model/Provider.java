@@ -21,11 +21,13 @@ public class Provider {
     private String image;
     @jakarta.persistence.Column(length = 10485760)
     private byte[] photoData;
+    private String password;
+    private String email; // Added email field
 
     public Provider() {
     }
 
-    public Provider(Long id, String name, String serviceType, String price, String gender, String phone, Double rating, Double lat, Double lng, String image, byte[] photoData) {
+    public Provider(Long id, String name, String serviceType, String price, String gender, String phone, Double rating, Double lat, Double lng, String image, byte[] photoData, String password, String email) {
         this.id = id;
         this.name = name;
         this.serviceType = serviceType;
@@ -37,6 +39,7 @@ public class Provider {
         this.lng = lng;
         this.image = image;
         this.photoData = photoData;
+        this.password = password;
     }
 
     // Getters and Setters
@@ -72,4 +75,10 @@ public class Provider {
 
     public byte[] getPhotoData() { return photoData; }
     public void setPhotoData(byte[] photoData) { this.photoData = photoData; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 }

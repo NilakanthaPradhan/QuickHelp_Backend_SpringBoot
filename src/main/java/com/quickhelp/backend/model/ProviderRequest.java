@@ -15,6 +15,8 @@ public class ProviderRequest {
     private Double lat;
     private Double lng;
     private String phoneNumber;
+    private String password; // New field for requested password
+    private String email; // New field for requested email
     
     @Column(length = 10485760)
     private byte[] photoData;
@@ -30,7 +32,7 @@ public class ProviderRequest {
 
     public ProviderRequest() {}
 
-    public ProviderRequest(Long id, String name, String serviceType, String description, String location, String phoneNumber, byte[] photoData, RequestStatus status) {
+    public ProviderRequest(Long id, String name, String serviceType, String description, String location, String phoneNumber, String email, byte[] photoData, RequestStatus status) {
         this.id = id;
         this.name = name;
         this.serviceType = serviceType;
@@ -64,6 +66,12 @@ public class ProviderRequest {
 
     public String getPhoneNumber() { return phoneNumber; }
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
     public byte[] getPhotoData() { return photoData; }
     public void setPhotoData(byte[] photoData) { this.photoData = photoData; }

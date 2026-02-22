@@ -10,4 +10,9 @@ public interface ProviderRepository extends JpaRepository<Provider, Long> {
 
     @org.springframework.data.jpa.repository.Query("SELECT p FROM Provider p WHERE (6371 * acos(cos(radians(:lat)) * cos(radians(p.lat)) * cos(radians(p.lng) - radians(:lng)) + sin(radians(:lat)) * sin(radians(p.lat)))) < :radius")
     List<Provider> findNearbyProviders(double lat, double lng, double radius);
+
+    java.util.Optional<Provider> findByPhone(String phone);
+    
+    @org.springframework.data.jpa.repository.Query("SELECT p FROM Provider p WHERE p.phone = :identifier OR p.email = :identifier")
+    java.util.Optional<Provider> findByIdentifier(@org.springframework.data.repository.query.Param("identifier") String identifier);
 }

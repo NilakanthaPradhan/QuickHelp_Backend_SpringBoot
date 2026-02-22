@@ -50,9 +50,35 @@ public class ApiController {
         return bookingRepository.findAll();
     }
 
+    @GetMapping("/bookings/provider/{providerId}")
+    public List<Booking> getProviderBookings(@PathVariable Long providerId) {
+        return bookingRepository.findByProviderId(providerId);
+    }
+
     @PostMapping("/bookings")
     public Booking createBooking(@RequestBody Booking booking) {
+        if (booking.getStatus() == null) {
+            booking.setStatus("PENDING");
+        }
         return bookingRepository.save(booking);
+    }
+
+    @PutMapping("/bookings/{id}/accept")
+    public org.springframework.http.ResponseEntity<?> acceptBooking(@PathVariable Long id) {
+        return bookingRepository.findById(id).map(booking -> {
+            booking.setStatus("ACCEPTED");
+            bookingRepository.save(booking);
+            return org.springframework.http.ResponseEntity.ok(booking);
+        }).orElse(org.springframework.http.ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/bookings/{id}/decline")
+    public org.springframework.http.ResponseEntity<?> declineBooking(@PathVariable Long id) {
+        return bookingRepository.findById(id).map(booking -> {
+            booking.setStatus("DECLINED");
+            bookingRepository.save(booking);
+            return org.springframework.http.ResponseEntity.ok(booking);
+        }).orElse(org.springframework.http.ResponseEntity.notFound().build());
     }
     
     @GetMapping("/admin/users")
@@ -108,6 +134,8 @@ public class ApiController {
             @RequestParam(name = "lat", required = false) Double lat,
             @RequestParam(name = "lng", required = false) Double lng,
             @RequestParam("phoneNumber") String phoneNumber,
+            @RequestParam(name = "email", required = false) String email,
+            @RequestParam(name = "password", required = false) String password,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         try {
             com.quickhelp.backend.model.ProviderRequest request = new com.quickhelp.backend.model.ProviderRequest();
@@ -118,6 +146,12 @@ public class ApiController {
             if (lat != null) request.setLat(lat);
             if (lng != null) request.setLng(lng);
             request.setPhoneNumber(phoneNumber);
+            if (email != null && !email.isEmpty()) request.setEmail(email);
+            if (password != null && !password.isEmpty()) {
+                request.setPassword(password);
+            } else {
+                request.setPassword(phoneNumber); // Fallback
+            }
             if (file != null && !file.isEmpty()) {
                 request.setPhotoData(file.getBytes());
             }
@@ -144,9 +178,15 @@ public class ApiController {
                 provider.setName(request.getName());
                 provider.setServiceType(request.getServiceType());
                 provider.setPhone(request.getPhoneNumber());
+                provider.setEmail(request.getEmail());
                 provider.setPhotoData(request.getPhotoData());
                 provider.setRating(0.0); // New provider default rating
                 provider.setPrice("₹200/hr"); // Default price or ask user?
+                if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+                    provider.setPassword(request.getPassword());
+                } else {
+                    provider.setPassword(request.getPhoneNumber()); // Fallback
+                }
                 
                 // Transfer location data
                 if (request.getLat() != null && request.getLng() != null) {

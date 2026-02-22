@@ -17,6 +17,9 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private com.quickhelp.backend.repository.ProviderRepository providerRepository;
+
     @PostMapping("/register")
     public ResponseEntity<?> register(
             @RequestParam("username") String username,
@@ -27,9 +30,6 @@ public class AuthController {
             @RequestParam(value = "address", required = false) String address,
             @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file) {
         
-        if (userRepository.findByUsername(username).isPresent()) {
-            return ResponseEntity.badRequest().body("Username already exists");
-        }
         User user = new User();
         user.setUsername(username);
         user.setPassword(password);
@@ -53,20 +53,23 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> creds) {
-        String username = creds.get("username");
+        String identifier = creds.get("identifier");
+        if (identifier == null || identifier.isEmpty()) {
+             identifier = creds.get("email") != null ? creds.get("email") : creds.get("phone"); // fallback for old API
+        }
         String password = creds.get("password");
 
-        Optional<User> userOpt = userRepository.findByUsername(username);
+        Optional<User> userOpt = userRepository.findByIdentifier(identifier);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             if (user.getPassword().equals(password)) {
-                System.out.println("✅ Login Success for: " + username);
+                System.out.println("✅ Login Success for: " + identifier);
                 return ResponseEntity.ok(user);
             } else {
-                System.out.println("❌ Login Failed: Password mismatch for " + username);
+                System.out.println("❌ Login Failed: Password mismatch for " + identifier);
             }
         } else {
-            System.out.println("❌ Login Failed: User not found: " + username);
+            System.out.println("❌ Login Failed: User not found: " + identifier);
         }
         return ResponseEntity.status(401).body("Invalid Credentials");
     }
@@ -97,5 +100,28 @@ public class AuthController {
             userRepository.save(user);
             return ResponseEntity.ok(user);
         }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/provider-login")
+    public ResponseEntity<?> providerLogin(@RequestBody Map<String, String> creds) {
+        String identifier = creds.get("identifier");
+        if (identifier == null || identifier.isEmpty()) {
+             identifier = creds.get("phone"); // fallback for old API
+        }
+        String password = creds.get("password");
+
+        Optional<com.quickhelp.backend.model.Provider> providerOpt = providerRepository.findByIdentifier(identifier);
+        if (providerOpt.isPresent()) {
+            com.quickhelp.backend.model.Provider provider = providerOpt.get();
+            if (provider.getPassword().equals(password)) {
+                System.out.println("✅ Provider Login Success for: " + identifier);
+                return ResponseEntity.ok(provider);
+            } else {
+                System.out.println("❌ Provider Login Failed: Password mismatch for " + identifier);
+            }
+        } else {
+            System.out.println("❌ Provider Login Failed: Provider not found: " + identifier);
+        }
+        return ResponseEntity.status(401).body("Invalid Credentials");
     }
 }
