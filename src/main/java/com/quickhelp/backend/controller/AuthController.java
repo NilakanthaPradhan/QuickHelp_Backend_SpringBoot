@@ -114,7 +114,7 @@ public class AuthController {
     public ResponseEntity<?> providerLogin(@RequestBody Map<String, String> creds) {
         String identifier = creds.get("identifier");
         if (identifier == null || identifier.isEmpty()) {
-             identifier = creds.get("phone"); // fallback for old API
+             identifier = creds.get("email") != null ? creds.get("email") : creds.get("phone"); // fallback for old API
         }
         String password = creds.get("password");
 
