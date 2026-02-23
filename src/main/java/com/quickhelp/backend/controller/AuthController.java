@@ -30,6 +30,14 @@ public class AuthController {
             @RequestParam(value = "address", required = false) String address,
             @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file) {
         
+        // Check for duplicates
+        if (email != null && !email.isEmpty() && userRepository.findByEmail(email).isPresent()) {
+            return ResponseEntity.badRequest().body("Error: Email already registered");
+        }
+        if (phone != null && !phone.isEmpty() && userRepository.findByIdentifier(phone).isPresent()) {
+            return ResponseEntity.badRequest().body("Error: Phone number already registered");
+        }
+        
         User user = new User();
         user.setUsername(username);
         user.setPassword(password);

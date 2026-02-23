@@ -137,6 +137,15 @@ public class ApiController {
             @RequestParam(name = "email", required = false) String email,
             @RequestParam(name = "password", required = false) String password,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        
+        // Check for duplicates
+        if (email != null && !email.isEmpty() && providerRepository.findByIdentifier(email).isPresent()) {
+            return org.springframework.http.ResponseEntity.badRequest().body("Error: Email already registered");
+        }
+        if (providerRepository.findByIdentifier(phoneNumber).isPresent()) {
+            return org.springframework.http.ResponseEntity.badRequest().body("Error: Phone number already registered");
+        }
+
         try {
             com.quickhelp.backend.model.ProviderRequest request = new com.quickhelp.backend.model.ProviderRequest();
             request.setName(name);

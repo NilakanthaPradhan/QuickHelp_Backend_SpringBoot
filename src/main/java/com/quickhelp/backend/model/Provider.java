@@ -14,6 +14,7 @@ public class Provider {
     private String serviceType;
     private String price;
     private String gender;
+    @jakarta.persistence.Column(unique = true)
     private String phone;
     private Double rating;
     private Double lat;
@@ -22,6 +23,7 @@ public class Provider {
     @jakarta.persistence.Column(length = 10485760)
     private byte[] photoData;
     private String password;
+    @jakarta.persistence.Column(unique = true)
     private String email; // Added email field
 
     public Provider() {

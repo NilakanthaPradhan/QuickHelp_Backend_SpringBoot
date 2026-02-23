@@ -15,7 +15,9 @@ public class User {
     
     private String username;
     private String password;
+    @jakarta.persistence.Column(unique = true)
     private String email;
+    @jakarta.persistence.Column(unique = true)
     private String phone;
     private String role;
     private String fullName;
