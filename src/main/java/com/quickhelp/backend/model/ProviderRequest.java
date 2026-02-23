@@ -17,6 +17,7 @@ public class ProviderRequest {
     private String phoneNumber;
     private String password; // New field for requested password
     private String email; // New field for requested email
+    private String gender; // Added for map filtering
     
     @Column(length = 10485760)
     private byte[] photoData;
@@ -41,6 +42,7 @@ public class ProviderRequest {
         this.phoneNumber = phoneNumber;
         this.photoData = photoData;
         this.status = status;
+        this.gender = gender;
     }
 
     public Long getId() { return id; }
@@ -72,6 +74,9 @@ public class ProviderRequest {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
 
     public byte[] getPhotoData() { return photoData; }
     public void setPhotoData(byte[] photoData) { this.photoData = photoData; }

@@ -9,7 +9,9 @@ import com.quickhelp.backend.repository.ServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -80,6 +82,15 @@ public class ApiController {
             return org.springframework.http.ResponseEntity.ok(booking);
         }).orElse(org.springframework.http.ResponseEntity.notFound().build());
     }
+
+    @PutMapping("/bookings/{id}/status")
+    public org.springframework.http.ResponseEntity<?> updateBookingStatus(@PathVariable Long id, @RequestParam("status") String status) {
+        return bookingRepository.findById(id).map(booking -> {
+            booking.setStatus(status);
+            bookingRepository.save(booking);
+            return org.springframework.http.ResponseEntity.ok(booking);
+        }).orElse(org.springframework.http.ResponseEntity.notFound().build());
+    }
     
     @GetMapping("/admin/users")
     public List<com.quickhelp.backend.model.User> getAllUsers() {
@@ -125,6 +136,71 @@ public class ApiController {
         return providerRepository.save(provider);
     }
 
+    @PutMapping("/provider-profile/{id}")
+    public org.springframework.http.ResponseEntity<?> updateProviderProfile(
+            @PathVariable Long id,
+            @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "serviceType", required = false) String serviceType,
+            @RequestParam(value = "price", required = false) String price
+    ) {
+        return providerRepository.findById(id).map(provider -> {
+            if (name != null) provider.setName(name);
+            if (phone != null) provider.setPhone(phone);
+            if (email != null) provider.setEmail(email);
+            if (serviceType != null) provider.setServiceType(serviceType);
+            if (price != null) provider.setPrice(price);
+
+            try {
+                if (file != null && !file.isEmpty()) {
+                    provider.setPhotoData(file.getBytes());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            providerRepository.save(provider);
+            return org.springframework.http.ResponseEntity.ok(provider);
+        }).orElse(org.springframework.http.ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/providers/search-location")
+    public org.springframework.http.ResponseEntity<List<Provider>> searchProvidersByLocation(
+            @RequestParam(value = "lat", required = true) Double lat,
+            @RequestParam(value = "lng", required = true) Double lng,
+            @RequestParam(value = "radiusKm", defaultValue = "10.0") Double radiusKm,
+            @RequestParam(value = "serviceType", required = false) String serviceType,
+            @RequestParam(value = "gender", required = false) String gender
+    ) {
+        // Fetch providers. For a massive production database, we'd use PostGIS, 
+        // but for QuickHelp we'll filter in-memory which is perfectly fast for a few thousand rows.
+        List<Provider> allProviders = providerRepository.findAll();
+
+        List<Provider> withinRadius = allProviders.stream()
+                .filter(p -> p.getLat() != null && p.getLng() != null) // Must have coordinates
+                .filter(p -> serviceType == null || serviceType.isEmpty() || p.getServiceType().equalsIgnoreCase(serviceType))
+                .filter(p -> gender == null || gender.isEmpty() || "Any".equalsIgnoreCase(gender) || gender.equalsIgnoreCase(p.getGender()))
+                .filter(p -> calculateHaversineDistance(lat, lng, p.getLat(), p.getLng()) <= radiusKm)
+                .sorted(Comparator.comparingDouble(p -> calculateHaversineDistance(lat, lng, p.getLat(), p.getLng()))) // Sort strictly by closest first
+                .collect(Collectors.toList());
+
+        return org.springframework.http.ResponseEntity.ok(withinRadius);
+    }
+
+    // Haversine formula to calculate distance between two lat/lng coordinates in kilometers
+    private double calculateHaversineDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371; // Radius of the earth in km
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; 
+    }
+
     @PostMapping("/provider-requests")
     public org.springframework.http.ResponseEntity<String> submitProviderRequest(
             @RequestParam("name") String name,
@@ -136,6 +212,7 @@ public class ApiController {
             @RequestParam("phoneNumber") String phoneNumber,
             @RequestParam(name = "email", required = false) String email,
             @RequestParam(name = "password", required = false) String password,
+            @RequestParam(name = "gender", required = false) String gender,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         
         // Check for duplicates
@@ -160,6 +237,9 @@ public class ApiController {
                 request.setPassword(password);
             } else {
                 request.setPassword(phoneNumber); // Fallback
+            }
+            if (gender != null && !gender.isEmpty()) {
+                request.setGender(gender);
             }
             if (file != null && !file.isEmpty()) {
                 request.setPhotoData(file.getBytes());
@@ -188,6 +268,7 @@ public class ApiController {
                 provider.setServiceType(request.getServiceType());
                 provider.setPhone(request.getPhoneNumber());
                 provider.setEmail(request.getEmail());
+                provider.setGender(request.getGender() != null ? request.getGender() : "Any"); // Transfer gender
                 provider.setPhotoData(request.getPhotoData());
                 provider.setRating(0.0); // New provider default rating
                 provider.setPrice("₹200/hr"); // Default price or ask user?
